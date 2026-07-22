@@ -201,6 +201,69 @@
   .modal .close{position:absolute;top:14px;right:16px;border:none;background:none;
     font-size:22px;color:var(--ink-soft);cursor:pointer;line-height:1}
 
+  /* ---------- 标签 / 批注 ---------- */
+  .ctxmenu{position:fixed;z-index:90;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;box-shadow:var(--shadow);padding:6px;display:none;min-width:150px}
+  .ctxmenu.open{display:block}
+  .ctxmenu button{display:flex;align-items:center;gap:8px;width:100%;border:none;background:none;
+    color:var(--ink);padding:9px 12px;border-radius:7px;font-size:14px;text-align:left}
+  .ctxmenu button:hover{background:var(--bg)}
+
+  .flash-tag{animation:flashbg 1.6s ease}
+  @keyframes flashbg{0%,30%{background:var(--accent-soft)}100%{background:transparent}}
+
+  .tag-search{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .tag-search input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:9px;
+    background:var(--bg);color:var(--ink);font-size:14px;outline:none}
+  .tag-search input:focus{border-color:var(--accent)}
+  .tag-list-box{overflow-y:auto;flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+
+  .taglist{grid-column:1/-1;display:flex;flex-direction:column;gap:10px}
+  .tag-item{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 42px 12px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  .tag-item:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+  .tag-item .tag-note{font-size:15px;color:var(--ink);margin-bottom:6px;
+    white-space:pre-wrap;word-break:break-word;line-height:1.5}
+  .tag-item .tag-note.empty{color:var(--ink-soft);font-style:italic}
+  .tag-item .tag-quote{font-size:13px;color:var(--ink-soft);border-left:3px solid var(--accent-soft);
+    padding-left:10px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;
+    -webkit-box-orient:vertical;overflow:hidden}
+  .tag-item .tag-meta{font-size:12px;color:var(--ink-soft);margin-top:8px;opacity:.85}
+  .tag-item .tag-del{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;
+    border:none;background:var(--bg);color:var(--ink-soft);font-size:16px;line-height:1;display:none}
+  .tag-item:hover .tag-del{display:block}
+  .tag-item .tag-del:hover{background:#c1666b;color:#fff}
+
+  .modal .field textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;
+    background:var(--bg);color:var(--ink);font-size:15px;outline:none;resize:vertical;
+    font-family:inherit;line-height:1.5}
+  .modal .field textarea:focus{border-color:var(--accent)}
+  .tag-quote-box{font-size:14px;color:var(--ink-soft);border-left:3px solid var(--accent-soft);
+    padding:8px 12px;margin-bottom:18px;max-height:130px;overflow:auto;line-height:1.6;
+    white-space:pre-wrap;word-break:break-word}
+
+  .toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:var(--ink);
+    color:var(--bg);padding:10px 20px;border-radius:20px;font-size:14px;z-index:100;opacity:0;
+    transition:opacity .3s;pointer-events:none}
+  .toast.show{opacity:.95}
+
+  /* ---------- 阅读时长统计 ---------- */
+  .modal .box.wide{width:min(480px,94vw)}
+  .stat-cards{display:flex;gap:10px;margin:4px 0 20px}
+  .stat-card{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:12px;
+    padding:14px 8px;text-align:center}
+  .stat-card .v{font-size:21px;font-weight:700;color:var(--accent);line-height:1.2}
+  .stat-card .k{font-size:12px;color:var(--ink-soft);margin-top:5px}
+  .chart-label{font-size:13px;color:var(--ink-soft);margin-bottom:10px}
+  .chart{display:flex;align-items:flex-end;gap:5px;height:130px}
+  .chart .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;
+    align-items:center;gap:5px;height:100%;cursor:default}
+  .chart .bar .b{width:100%;max-width:22px;background:var(--accent-soft);border-radius:4px 4px 0 0;
+    min-height:2px}
+  .chart .bar.today .b{background:var(--accent)}
+  .chart .bar .lbl{font-size:10px;color:var(--ink-soft);white-space:nowrap;transform:rotate(0)}
+  .r-foot .r-clock{white-space:nowrap}
+
   ::-webkit-scrollbar{width:10px;height:10px}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
   ::-webkit-scrollbar-thumb:hover{background:var(--ink-soft)}
@@ -219,6 +282,7 @@
         <input id="q" type="search" placeholder="搜索书名 / 编号…（共加载中…）" autocomplete="off">
       </div>
       <button class="acct-btn" id="acctBtn">登录 / 注册</button>
+      <button class="icon-btn" id="statsBtn" title="阅读时长统计">📊</button>
       <button class="icon-btn" id="themeBtn" title="切换主题">◐</button>
     </div>
     <div class="libtabs" id="libtabs"></div>
@@ -227,6 +291,7 @@
     <div class="shelf-tabs" id="shelfTabs">
       <button data-view="all" class="on">全部藏书</button>
       <button data-view="recent">最近在读</button>
+      <button data-view="tags">我的标签</button>
     </div>
     <div class="count" id="count"></div>
     <div class="grid" id="grid"></div>
@@ -241,6 +306,7 @@
     <button class="r-btn" id="backBtn">‹ 书架</button>
     <div class="r-title" id="rTitle"></div>
     <div class="r-ch" id="rCh"></div>
+    <button class="r-btn" id="tagBtn">🏷️ 标签</button>
     <button class="r-btn" id="tocBtn">目录</button>
     <button class="r-btn" id="setBtn">Aa</button>
   </div>
@@ -249,6 +315,7 @@
   </div>
   <div class="r-foot">
     <span id="footBook"></span>
+    <span class="r-clock" id="footClock" title="今日阅读时长"></span>
     <span id="footProg">0%</span>
   </div>
 </div>
@@ -306,6 +373,59 @@
         <button class="swatch" data-theme="dark" style="background:#16171a"></button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Tags drawer (本书标签) -->
+<div class="drawer right" id="tagDrawer">
+  <div class="mask" data-close></div>
+  <div class="panel">
+    <h3>本书标签</h3>
+    <div class="tag-search">
+      <input id="tagSearch" placeholder="搜索标签内容 / 原文…" autocomplete="off">
+    </div>
+    <div class="tag-list-box" id="tagListBox"></div>
+  </div>
+</div>
+
+<!-- 右键菜单 -->
+<div class="ctxmenu" id="ctxMenu">
+  <button id="ctxCreate">🏷️ 创建标签</button>
+</div>
+
+<!-- 创建标签弹窗 -->
+<div class="modal" id="tagModal">
+  <div class="mask" data-close></div>
+  <div class="box">
+    <button class="close" id="tagClose">×</button>
+    <h2>创建标签</h2>
+    <div class="sub">为选中的文字添加一条笔记，随后可一键跳回此处</div>
+    <div class="tag-quote-box" id="tagQuote"></div>
+    <div class="field">
+      <label>标签内容 / 笔记</label>
+      <textarea id="tagNote" rows="4" placeholder="写点什么…（可留空，仅收藏原文）"></textarea>
+    </div>
+    <button class="submit" id="tagSave">保存标签</button>
+  </div>
+</div>
+
+<!-- 提示 -->
+<div class="toast" id="toast"></div>
+
+<!-- 阅读时长统计 -->
+<div class="modal" id="statsModal">
+  <div class="mask" data-close></div>
+  <div class="box wide">
+    <button class="close" id="statsClose">×</button>
+    <h2>阅读时长</h2>
+    <div class="sub">仅统计在阅读器中实际阅读的时间</div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="v" id="statToday">—</div><div class="k">今日</div></div>
+      <div class="stat-card"><div class="v" id="statWeek">—</div><div class="k">近 7 天</div></div>
+      <div class="stat-card"><div class="v" id="statTotal">—</div><div class="k">累计</div></div>
+    </div>
+    <div class="chart-label">最近 14 天</div>
+    <div class="chart" id="statChart"></div>
   </div>
 </div>
 
@@ -368,14 +488,15 @@ const Auth = {
   if(k&&(k.startsWith('prog_')||k==='recent'))del.push(k);}del.forEach(k=>localStorage.removeItem(k));})();
 
 const DB = {
-  online:false, prog:{}, recent:[],
+  online:false, prog:{}, recent:[], tags:[], readtime:{},
   async init(){
-    this.prog={}; this.recent=[]; this.online=false;
+    this.prog={}; this.recent=[]; this.tags=[]; this.readtime={}; this.online=false;
     try{
       const r=await fetch('/api/state?u='+CLIENT,{headers:Auth.headers()});
       if(!r.ok) throw new Error('http '+r.status);
       const s=await r.json();
-      this.prog=s.prog||{}; this.recent=s.recent||[]; this.online=true;
+      this.prog=s.prog||{}; this.recent=s.recent||[]; this.tags=s.tags||[];
+      this.readtime=s.readtime||{}; this.online=true;
     }catch(e){
       console.warn('阅读进度数据库不可用，本次阅读进度不会被保存');
     }
@@ -405,6 +526,27 @@ const DB = {
     if(this.online){try{await fetch('/api/delete?u='+CLIENT,{method:'POST',
       headers:Auth.headers({'Content-Type':'application/json'}),
       body:JSON.stringify({lib,bookid:id})});}catch(e){}}
+  },
+  async addTag(payload){
+    let saved=null;
+    if(this.online){try{
+      const r=await fetch('/api/tag_add?u='+CLIENT,{method:'POST',
+        headers:Auth.headers({'Content-Type':'application/json'}),
+        body:JSON.stringify(payload)});
+      const d=await r.json(); if(d&&d.tag)saved=d.tag;
+    }catch(e){}}
+    if(!saved) saved=Object.assign({id:'local-'+Date.now(),created:Date.now()/1000},payload);
+    this.tags.unshift(saved);
+    return saved;
+  },
+  async removeTag(id){
+    this.tags=this.tags.filter(t=>t.id!==id);
+    if(this.online){try{await fetch('/api/tag_del?u='+CLIENT,{method:'POST',
+      headers:Auth.headers({'Content-Type':'application/json'}),
+      body:JSON.stringify({id})});}catch(e){}}
+  },
+  bookTags(lib,id){
+    return this.tags.filter(t=>t.lib===lib&&String(t.bookid)===String(id));
   }
 };
 
@@ -511,9 +653,21 @@ function updateShelfTabs(){
   document.querySelectorAll('#shelfTabs button').forEach(b=>b.classList.toggle('on',b.dataset.view===view));
   const n=recentList().length;
   $('#shelfTabs button[data-view="recent"]').innerHTML=`最近在读${n?`<span class="n">${n}</span>`:''}`;
+  const tn=DB.tags.length;
+  $('#shelfTabs button[data-view="tags"]').innerHTML=`我的标签${tn?`<span class="n">${tn}</span>`:''}`;
 }
 function render(){                       // 按当前视图渲染书架
   updateShelfTabs();
+  if(view==='tags'){
+    const t=qEl.value.trim().toLowerCase();
+    const list=DB.tags.filter(x=>!t||matchTag(x,t));
+    grid.innerHTML=`<div class="taglist">${list.map(x=>tagItemHTML(x,true)).join('')}</div>`;
+    $('#count').textContent=`${list.length} 个标签`;
+    $('#loadmore').classList.add('hidden');
+    $('#empty').textContent=DB.tags.length?'没有匹配的标签':'还没有创建任何标签';
+    $('#empty').classList.toggle('hidden',list.length>0);
+    return;
+  }
   if(view==='recent'){
     const list=recentList();
     grid.innerHTML=list.map(x=>cardHTML(x.b,x.lib)).join('');
@@ -549,6 +703,17 @@ function switchLib(lib){
 }
 
 grid.onclick=async e=>{
+  const ti=e.target.closest('.tag-item');
+  if(ti){
+    const t=DB.tags.find(x=>x.id===ti.dataset.id); if(!t)return;
+    if(e.target.closest('.tag-del')){
+      e.stopPropagation();
+      if(confirm('删除该标签？')){await DB.removeTag(t.id);render();}
+      return;
+    }
+    openBook(t.lib,String(t.bookid),t);        // 打开该书并跳到标签处
+    return;
+  }
   const c=e.target.closest('.card'); if(!c)return;
   if(e.target.closest('.del')){                            // 删除阅读记录
     e.stopPropagation();
@@ -684,7 +849,7 @@ rContent.addEventListener('click',e=>{
   if(el)el.scrollIntoView();
 });
 
-function openBook(lib,id){
+function openBook(lib,id,pendingTag){
   const b=bookIndex[lib+'/'+id]; if(!b)return;
   CUR=b;                                        // 含 .lib 与 .bookid
   $('#library').classList.add('hidden');
@@ -694,12 +859,14 @@ function openBook(lib,id){
   $('#rCh').textContent=''; rContent.innerHTML='<div class="spinner"></div>';
   document.title=b.title+' · 书房';
   DB.pushRecent(lib,id);
+  RT.markActivity(); updateFootClock();         // 开始计时
 
   fetch('books/'+lib+'/'+id+'.txt').then(r=>{if(!r.ok)throw 0;return r.text()}).then(text=>{
     renderBook(b.title,parseChapters(text));
     const saved=DB.getProg(lib,id);
     requestAnimationFrame(()=>{
-      if(saved&&saved.top){rScroll.scrollTop=saved.top;}
+      if(pendingTag){jumpToTag(pendingTag);}
+      else if(saved&&saved.top){rScroll.scrollTop=saved.top;}
       else rScroll.scrollTop=0;
       updateChapter();
     });
@@ -708,6 +875,7 @@ function openBook(lib,id){
 
 function closeBook(){
   saveProg();
+  RT.flush();                                   // 结账本次阅读时长
   $('#reader').classList.add('hidden');
   $('#library').classList.remove('hidden');
   document.title='书房 · 阅读器';
@@ -746,7 +914,7 @@ $('#backBtn').onclick=closeBook;
 $('#tocBtn').onclick=()=>$('#tocDrawer').classList.add('open');
 $('#setBtn').onclick=()=>$('#setDrawer').classList.add('open');
 document.querySelectorAll('[data-close]').forEach(m=>m.onclick=()=>{
-  $('#tocDrawer').classList.remove('open');$('#setDrawer').classList.remove('open');});
+  const box=m.closest('.drawer,.modal'); if(box)box.classList.remove('open');});
 $('#tocList').onclick=e=>{
   const a=e.target.closest('a'); if(!a)return; e.preventDefault();
   const el=document.getElementById('chap-'+a.dataset.i);
@@ -756,14 +924,211 @@ $('#tocList').onclick=e=>{
 /* keyboard */
 document.addEventListener('keydown',e=>{
   if($('#reader').classList.contains('hidden'))return;
-  if(e.key==='Escape')closeBook();
-  else if(e.key==='ArrowLeft'||e.key==='PageUp'){jumpChapter(-1);e.preventDefault();}
+  const typing=/^(INPUT|TEXTAREA)$/.test(e.target.tagName);
+  if(e.key==='Escape'){
+    const overlay=['#tagModal','#tagDrawer','#tocDrawer','#setDrawer']
+      .map($).find(el=>el.classList.contains('open'));
+    if(overlay){overlay.classList.remove('open');return;}
+    closeBook();return;
+  }
+  if(typing)return;
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){jumpChapter(-1);e.preventDefault();}
   else if(e.key==='ArrowRight'||e.key==='PageDown'){jumpChapter(1);e.preventDefault();}
 });
 function jumpChapter(d){
   const i=Math.max(0,Math.min(CHAPTERS.length-1,currentChapterIndex()+d));
   const el=document.getElementById('chap-'+i); if(el)el.scrollIntoView();
 }
+
+/* ---------- 标签 / 批注 ---------- */
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+function fmtDate(sec){
+  const d=new Date((sec||0)*1000); if(isNaN(d.getTime()))return'';
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function matchTag(t,term){
+  const b=bookIndex[t.lib+'/'+t.bookid];
+  return `${t.note} ${t.text} ${t.ch||''} ${b?b.title:''}`.toLowerCase().includes(term);
+}
+function tagItemHTML(t,withBook){
+  const b=bookIndex[t.lib+'/'+t.bookid];
+  const bt=b?b.title:('#'+t.bookid);
+  const meta=[withBook?`《${esc(bt)}》`:'', t.ch?esc(t.ch):'', fmtDate(t.created)]
+    .filter(Boolean).join('  ·  ');
+  return `<div class="tag-item" data-id="${esc(t.id)}">
+    <button class="tag-del" title="删除标签">×</button>
+    <div class="tag-note${t.note?'':' empty'}">${t.note?esc(t.note):'（无笔记）'}</div>
+    ${t.text?`<div class="tag-quote">${esc(t.text)}</div>`:''}
+    <div class="tag-meta">${meta}</div>
+  </div>`;
+}
+
+// 读取阅读区当前选中的文字及其定位信息
+function readerSelection(){
+  const sel=window.getSelection();
+  if(!sel||sel.rangeCount===0||sel.isCollapsed)return null;
+  const text=sel.toString().replace(/\s+/g,' ').trim();
+  if(!text)return null;
+  let node=sel.getRangeAt(0).startContainer;
+  let el=node.nodeType===1?node:node.parentElement;
+  if(!el||!rContent.contains(el))return null;
+  const chapEl=el.closest('.chap');
+  const chap=chapEl?(parseInt(chapEl.id.replace('chap-',''),10)||0):currentChapterIndex();
+  return {text:text.slice(0,300), chap,
+    ch:(CHAPTERS[chap]&&CHAPTERS[chap].title)||'',
+    top:Math.round(rScroll.scrollTop)};
+}
+
+// 右键菜单
+let pendingSel=null;
+const ctxMenu=$('#ctxMenu');
+rContent.addEventListener('contextmenu',e=>{
+  const info=readerSelection();
+  if(!info)return;                        // 无选中则用浏览器默认菜单
+  e.preventDefault();
+  pendingSel=info;
+  ctxMenu.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
+  ctxMenu.style.top=Math.min(e.clientY,window.innerHeight-70)+'px';
+  ctxMenu.classList.add('open');
+});
+const hideCtx=()=>ctxMenu.classList.remove('open');
+document.addEventListener('click',hideCtx);
+document.addEventListener('scroll',hideCtx,true);
+$('#ctxCreate').onclick=()=>{hideCtx(); if(pendingSel)openTagModal(pendingSel);};
+
+// 创建标签弹窗
+let tagModalInfo=null;
+function openTagModal(info){
+  tagModalInfo=info;
+  $('#tagQuote').textContent='“'+info.text+'”';
+  $('#tagNote').value='';
+  $('#tagModal').classList.add('open');
+  setTimeout(()=>$('#tagNote').focus(),30);
+}
+$('#tagClose').onclick=()=>$('#tagModal').classList.remove('open');
+$('#tagSave').onclick=async()=>{
+  if(!tagModalInfo||!CUR)return;
+  const note=$('#tagNote').value.trim();
+  await DB.addTag({lib:CUR.lib,bookid:String(CUR.bookid),
+    text:tagModalInfo.text,note,chap:tagModalInfo.chap,ch:tagModalInfo.ch,top:tagModalInfo.top});
+  $('#tagModal').classList.remove('open');
+  if($('#tagDrawer').classList.contains('open'))renderTagDrawer();
+  toast('已创建标签');
+};
+
+// 本书标签抽屉
+function renderTagDrawer(){
+  const term=($('#tagSearch').value||'').trim().toLowerCase();
+  const list=(CUR?DB.bookTags(CUR.lib,CUR.bookid):[])
+    .filter(t=>!term||matchTag(t,term));
+  $('#tagListBox').innerHTML=list.length
+    ? list.map(t=>tagItemHTML(t,false)).join('')
+    : '<div class="empty" style="padding:34px 0">'
+      +(CUR&&DB.bookTags(CUR.lib,CUR.bookid).length?'没有匹配的标签':'还没有标签，选中正文右键即可创建')+'</div>';
+}
+$('#tagBtn').onclick=()=>{renderTagDrawer();$('#tagDrawer').classList.add('open');};
+$('#tagSearch').oninput=renderTagDrawer;
+$('#tagListBox').onclick=async e=>{
+  const ti=e.target.closest('.tag-item'); if(!ti)return;
+  const t=DB.tags.find(x=>x.id===ti.dataset.id); if(!t)return;
+  if(e.target.closest('.tag-del')){
+    e.stopPropagation();
+    if(confirm('删除该标签？')){await DB.removeTag(t.id);renderTagDrawer();}
+    return;
+  }
+  $('#tagDrawer').classList.remove('open');
+  jumpToTag(t);
+};
+
+// 跳转到标签处并高亮
+function flash(el){
+  el.classList.remove('flash-tag'); void el.offsetWidth; el.classList.add('flash-tag');
+  setTimeout(()=>el.classList.remove('flash-tag'),1600);
+}
+function jumpToTag(t){
+  const chapEl=document.getElementById('chap-'+t.chap);
+  let target=null;
+  if(t.text){
+    const needle=t.text.replace(/\s+/g,'').slice(0,30);
+    const scope=chapEl?chapEl.querySelectorAll('p'):rContent.querySelectorAll('p');
+    for(const p of scope){
+      if(p.textContent.replace(/\s+/g,'').includes(needle)){target=p;break;}
+    }
+  }
+  if(target){target.scrollIntoView({block:'center'});flash(target);}
+  else if(chapEl){chapEl.scrollIntoView();flash(chapEl);}
+  else if(t.top){rScroll.scrollTop=t.top;}
+}
+
+/* ---------- 每日阅读时长 ---------- */
+function dateKey(d){const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+const todayKey=()=>dateKey(new Date());
+function fmtDur(s){s=Math.round(s||0);
+  if(s<60)return s+' 秒';
+  const m=Math.floor(s/60); if(m<60)return m+' 分钟';
+  const h=Math.floor(m/60), mm=m%60; return h+' 小时'+(mm?' '+mm+' 分':'');}
+
+const RT={
+  IDLE:300000,                            // 超过 5 分钟无操作视为未在阅读
+  pending:{}, lastAct:Date.now(),
+  markActivity(){this.lastAct=Date.now();},
+  reading(){
+    return !$('#reader').classList.contains('hidden')
+      && document.visibilityState==='visible'
+      && (Date.now()-this.lastAct)<this.IDLE;
+  },
+  tick(){
+    if(!this.reading())return;
+    const k=todayKey();
+    DB.readtime[k]=(DB.readtime[k]||0)+1;   // 本地即时反映
+    this.pending[k]=(this.pending[k]||0)+1; // 待上报增量
+    updateFootClock();
+  },
+  flush(keepalive){
+    const b=this.pending; this.pending={};
+    if(!Object.keys(b).length||!DB.online)return;
+    try{
+      fetch('/api/readtime?u='+CLIENT,{method:'POST',keepalive:!!keepalive,
+        headers:Auth.headers({'Content-Type':'application/json'}),
+        body:JSON.stringify({buckets:b})}).catch(()=>{});
+    }catch(e){}
+  }
+};
+setInterval(()=>RT.tick(),1000);
+setInterval(()=>RT.flush(),30000);
+['scroll','keydown','mousemove','touchstart','wheel','click'].forEach(ev=>
+  document.addEventListener(ev,()=>RT.markActivity(),{passive:true}));
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden')RT.flush(true);});
+window.addEventListener('pagehide',()=>RT.flush(true));
+
+function updateFootClock(){
+  const el=$('#footClock'); if(el)el.textContent='⏱ 今日 '+fmtDur(DB.readtime[todayKey()]||0);
+}
+
+/* 统计弹窗 */
+function renderStats(){
+  const secsOf=k=>DB.readtime[k]||0, tk=todayKey(), now=new Date();
+  const days=[];
+  for(let i=13;i>=0;i--){const d=new Date(now); d.setDate(now.getDate()-i);
+    days.push({k:dateKey(d), secs:secsOf(dateKey(d)), lbl:(d.getMonth()+1)+'/'+d.getDate()});}
+  const max=Math.max(1,...days.map(d=>d.secs));
+  $('#statChart').innerHTML=days.map(d=>{
+    const h=Math.max(d.secs>0?4:0,Math.round(d.secs/max*100));
+    return `<div class="bar${d.k===tk?' today':''}" title="${d.lbl} · ${fmtDur(d.secs)}">
+      <div class="b" style="height:${h}%"></div><div class="lbl">${d.lbl}</div></div>`;
+  }).join('');
+  $('#statToday').textContent=fmtDur(secsOf(tk));
+  $('#statWeek').textContent=fmtDur(days.slice(-7).reduce((a,d)=>a+d.secs,0));
+  $('#statTotal').textContent=fmtDur(Object.values(DB.readtime).reduce((a,v)=>a+v,0));
+}
+$('#statsBtn').onclick=()=>{renderStats();$('#statsModal').classList.add('open');};
+$('#statsClose').onclick=()=>$('#statsModal').classList.remove('open');
 
 /* ---------- reading settings ---------- */
 const R=document.documentElement.style;
