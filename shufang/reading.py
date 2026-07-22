@@ -19,7 +19,8 @@ class ReadingMixin:
         prog = {}
         for d in db.col_prog.find({"user": user}):
             key = f"{d.get('lib', 'cn')}/{d['bookid']}"
-            prog[key] = {"top": d.get("top", 0), "pct": d.get("pct", 0)}
+            prog[key] = {"top": d.get("top", 0), "pct": d.get("pct", 0),
+                         "secs": int(d.get("secs", 0) or 0)}
         rec = db.col_recent.find_one({"_id": user})
         recent = rec.get("items", []) if rec else []
         return self._send_json({
