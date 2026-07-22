@@ -27,9 +27,9 @@ services:
       - "8000:8000"
     volumes:
       - .:/app                         # 应用代码目录（改动即时生效）
-      - ../cn:/app/books/cn:ro         # 中文图书
-      - ../en:/app/books/en:ro         # 英文图书
-      - ../yi:/app/books/yi:ro         # 翻译图书
+      - ../shu/cn:/app/books/cn:ro         # 中文图书
+      - ../shu/en:/app/books/en:ro         # 英文图书
+      - ../shu/yi:/app/books/yi:ro         # 翻译图书
 
 volumes:
   mongo-data:
