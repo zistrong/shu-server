@@ -43,6 +43,8 @@ class BaseHandler(SimpleHTTPRequestHandler):
         ".txt": "text/plain; charset=utf-8",
         ".json": "application/json; charset=utf-8",
         ".html": "text/html; charset=utf-8",
+        ".js": "text/javascript; charset=utf-8",
+        ".webmanifest": "application/manifest+json; charset=utf-8",
     }
 
     # ---------- 请求工具 ----------

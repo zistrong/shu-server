@@ -2,8 +2,18 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>书房 · 阅读器</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#8a5a2b">
+<meta name="description" content="本地书房阅读器：按书库浏览、阅读、记录进度、标签与阅读时长统计。">
+<link rel="icon" type="image/png" href="/icons/favicon-64.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="书房">
 <style>
   :root{
     --bg:#f4f1ea; --panel:#fffdf8; --ink:#2b2620; --ink-soft:#6b6357;
@@ -1168,6 +1178,13 @@ $('#ffSeg').onclick=e=>{if(e.target.dataset.ff){cfg.ff=e.target.dataset.ff;apply
 $('#themeSeg').onclick=e=>{if(e.target.dataset.theme)applyTheme(e.target.dataset.theme);};
 applyCfg();
 window.addEventListener('beforeunload',saveProg);
+
+/* ---------- PWA：注册 Service Worker ---------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
