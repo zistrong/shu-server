@@ -214,11 +214,17 @@
 
   /* ---------- 标签 / 批注 ---------- */
   .ctxmenu{position:fixed;z-index:90;background:var(--panel);border:1px solid var(--line);
-    border-radius:10px;box-shadow:var(--shadow);padding:6px;display:none;min-width:150px}
+    border-radius:10px;box-shadow:var(--shadow);padding:6px;display:none;min-width:150px;
+    touch-action:manipulation;user-select:none;-webkit-user-select:none}
   .ctxmenu.open{display:block}
   .ctxmenu button{display:flex;align-items:center;gap:8px;width:100%;border:none;background:none;
     color:var(--ink);padding:9px 12px;border-radius:7px;font-size:14px;text-align:left}
   .ctxmenu button:hover{background:var(--bg)}
+  .ctxmenu button:active{background:var(--bg)}
+  @media(hover:none){
+    .ctxmenu{padding:5px;min-width:158px}
+    .ctxmenu button{padding:12px 14px;font-size:15px}
+  }
 
   .flash-tag{animation:flashbg 1.6s ease}
   @keyframes flashbg{0%,30%{background:var(--accent-soft)}100%{background:transparent}}
@@ -244,6 +250,11 @@
     border:none;background:var(--bg);color:var(--ink-soft);font-size:16px;line-height:1;display:none}
   .tag-item:hover .tag-del{display:block}
   .tag-item .tag-del:hover{background:#c1666b;color:#fff}
+  /* 触屏没有 hover，删除按钮常驻并放大点击区域 */
+  @media(hover:none){
+    .tag-item{padding-right:50px}
+    .tag-item .tag-del{display:block;width:34px;height:34px;font-size:19px}
+  }
 
   .modal .field textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;
     background:var(--bg);color:var(--ink);font-size:15px;outline:none;resize:vertical;
@@ -998,22 +1009,62 @@ function readerSelection(){
     top:Math.round(rScroll.scrollTop)};
 }
 
-// 右键菜单
+// 右键菜单 / 触屏选中菜单
 let pendingSel=null;
 const ctxMenu=$('#ctxMenu');
+const CTX_W=170, CTX_H=56;
+const IS_TOUCH=matchMedia('(hover:none),(pointer:coarse)').matches;
+// 记住选区是用手指还是鼠标划出来的（二合一设备两种都可能）
+let touchSel=false;
+rContent.addEventListener('touchstart',()=>{touchSel=true;},{passive:true});
+rContent.addEventListener('mousedown',()=>{touchSel=false;});
+function showCtx(info,x,y){
+  pendingSel=info;
+  ctxMenu.style.left=Math.max(8,Math.min(x,window.innerWidth-CTX_W-8))+'px';
+  ctxMenu.style.top=Math.max(8,Math.min(y,window.innerHeight-CTX_H-8))+'px';
+  ctxMenu.classList.add('open');
+}
+const hideCtx=()=>ctxMenu.classList.remove('open');
+// 触屏：把菜单贴在选区下方（上方通常被系统的复制菜单占用）
+function selectionAnchor(){
+  const sel=window.getSelection();
+  if(!sel||sel.rangeCount===0)return null;
+  const r=sel.getRangeAt(0).getBoundingClientRect();
+  if(!r||(!r.width&&!r.height))return null;
+  const below=r.bottom+12, above=r.top-CTX_H-12;
+  return {x:r.left+r.width/2-CTX_W/2,
+          y:(below+CTX_H<=window.innerHeight-8||above<8)?below:above};
+}
 rContent.addEventListener('contextmenu',e=>{
   const info=readerSelection();
   if(!info)return;                        // 无选中则用浏览器默认菜单
   e.preventDefault();
-  pendingSel=info;
-  ctxMenu.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
-  ctxMenu.style.top=Math.min(e.clientY,window.innerHeight-70)+'px';
-  ctxMenu.classList.add('open');
+  showCtx(info,e.clientX,e.clientY);
 });
-const hideCtx=()=>ctxMenu.classList.remove('open');
-document.addEventListener('click',hideCtx);
-document.addEventListener('scroll',hideCtx,true);
-$('#ctxCreate').onclick=()=>{hideCtx(); if(pendingSel)openTagModal(pendingSel);};
+// 触屏：长按选中文字后自动弹出「创建标签」
+let selTimer=null;
+document.addEventListener('selectionchange',()=>{
+  if(!touchSel)return;                    // 鼠标仍走右键菜单
+  clearTimeout(selTimer);
+  selTimer=setTimeout(()=>{
+    if($('#tagModal').classList.contains('open'))return;
+    const info=readerSelection();
+    if(!info){hideCtx();return;}          // 选区被取消
+    const a=selectionAnchor(); if(!a)return;
+    showCtx(info,a.x,a.y);
+  },380);                                 // 等拖动选择手柄结束
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.ctxmenu'))hideCtx();});
+document.addEventListener('scroll',e=>{
+  if(ctxMenu.contains(e.target))return;
+  // 触屏滚动时选区仍在，跟着选区移动而不是直接消失
+  if(touchSel&&ctxMenu.classList.contains('open')&&pendingSel){
+    const a=selectionAnchor();
+    if(a){showCtx(pendingSel,a.x,a.y);return;}
+  }
+  hideCtx();
+},true);
+$('#ctxCreate').onclick=()=>{clearTimeout(selTimer);hideCtx(); if(pendingSel)openTagModal(pendingSel);};
 
 // 创建标签弹窗
 let tagModalInfo=null;
@@ -1024,13 +1075,17 @@ function openTagModal(info){
   $('#tagModal').classList.add('open');
   setTimeout(()=>$('#tagNote').focus(),30);
 }
-$('#tagClose').onclick=()=>$('#tagModal').classList.remove('open');
+function closeTagModal(){
+  $('#tagModal').classList.remove('open');
+  const s=window.getSelection(); if(s)s.removeAllRanges();   // 触屏：避免选区残留再次弹出菜单
+}
+$('#tagClose').onclick=closeTagModal;
 $('#tagSave').onclick=async()=>{
   if(!tagModalInfo||!CUR)return;
   const note=$('#tagNote').value.trim();
   await DB.addTag({lib:CUR.lib,bookid:String(CUR.bookid),
     text:tagModalInfo.text,note,chap:tagModalInfo.chap,ch:tagModalInfo.ch,top:tagModalInfo.top});
-  $('#tagModal').classList.remove('open');
+  closeTagModal();
   if($('#tagDrawer').classList.contains('open'))renderTagDrawer();
   toast('已创建标签');
 };
@@ -1043,7 +1098,8 @@ function renderTagDrawer(){
   $('#tagListBox').innerHTML=list.length
     ? list.map(t=>tagItemHTML(t,false)).join('')
     : '<div class="empty" style="padding:34px 0">'
-      +(CUR&&DB.bookTags(CUR.lib,CUR.bookid).length?'没有匹配的标签':'还没有标签，选中正文右键即可创建')+'</div>';
+      +(CUR&&DB.bookTags(CUR.lib,CUR.bookid).length?'没有匹配的标签'
+        :(IS_TOUCH?'还没有标签，长按选中正文即可创建':'还没有标签，选中正文右键即可创建'))+'</div>';
 }
 $('#tagBtn').onclick=()=>{renderTagDrawer();$('#tagDrawer').classList.add('open');};
 $('#tagSearch').oninput=renderTagDrawer;
