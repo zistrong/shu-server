@@ -2,7 +2,7 @@
 这位老哥 https://github.com/dooshu/shu 的图书的server端
 ## 如何使用
 ### 前置
-需要安装docker， docker-compose
+需要安装docker， docker-compose（没有需要手动安装Python3, MongoDB）
 ### 启动server
 1. 将本程序clone到上面的老哥的shu的同级目录下
 2. 执行 docker-compose up -d（第一次较慢， 需要下载一些镜像）
