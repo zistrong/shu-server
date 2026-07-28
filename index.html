@@ -33,6 +33,13 @@
     --line:#d8c9ab; --accent:#8a5a2b; --accent-soft:#e0d2b4;
     --read-bg:#e8dcc4; --read-ink:#463a28;
   }
+  /* 墨水屏：纯黑白高对比，无阴影/无渐变 */
+  [data-theme=eink]{
+    --bg:#fff; --panel:#fff; --ink:#000; --ink-soft:#555;
+    --line:#000; --accent:#000; --accent-soft:#dcdcdc;
+    --shadow:none;
+    --read-bg:#fff; --read-ink:#000;
+  }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
   body{
@@ -289,6 +296,44 @@
   ::-webkit-scrollbar{width:10px;height:10px}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
   ::-webkit-scrollbar-thumb:hover{background:var(--ink-soft)}
+
+  /* ---------- 墨水屏适配：去动效、去半透明、去渐变 ---------- */
+  [data-theme=eink] *,
+  [data-theme=eink] *::before,
+  [data-theme=eink] *::after{
+    transition:none!important; animation:none!important;
+    box-shadow:none!important; text-shadow:none!important;
+    backdrop-filter:none!important; -webkit-backdrop-filter:none!important;
+  }
+  [data-theme=eink] .r-scroll{scroll-behavior:auto}
+  [data-theme=eink] .card:hover{transform:none}
+  [data-theme=eink] .search svg{opacity:1}
+  /* 书封改为白底黑框，避免整块深色刷屏 */
+  [data-theme=eink] .cover{background:#fff!important;color:#000;border-bottom:1px solid #000}
+  [data-theme=eink] .cover .id{opacity:1}
+  [data-theme=eink] .cover .id .ctag{background:#000;color:#fff}
+  [data-theme=eink] .card .del{background:#000;color:#fff}
+  [data-theme=eink] .card .del:hover,
+  [data-theme=eink] .tag-item .tag-del:hover{background:#000;color:#fff}
+  /* 蒙层半透明会被抖动成灰点，改为透明 + 面板描边 */
+  [data-theme=eink] .drawer .mask,
+  [data-theme=eink] .modal .mask{background:transparent}
+  [data-theme=eink] .drawer .panel,
+  [data-theme=eink] .modal .box,
+  [data-theme=eink] .ctxmenu{border:2px solid #000}
+  [data-theme=eink] .r-top{background:var(--read-bg);border-bottom:1px solid #000}
+  [data-theme=eink] .r-foot{background:var(--read-bg);border-top:1px solid #000}
+  [data-theme=eink] .r-content .book-toc{background:transparent}
+  [data-theme=eink] .seg button.on,
+  [data-theme=eink] .swatch.on{border-width:2px}
+  [data-theme=eink] .modal .err{color:#000;font-weight:600}
+  [data-theme=eink] .modal .submit:hover{filter:none}
+  /* 旋转 loading 会持续刷屏，换成静态文字 */
+  [data-theme=eink] .spinner{width:auto;height:auto;border:none;border-radius:0;
+    text-align:center;color:var(--ink-soft);font-size:14px}
+  [data-theme=eink] .spinner::after{content:"载入中…"}
+  /* 标签定位高亮：只保留一次亮/灭，不做渐变动画 */
+  [data-theme=eink] .flash-tag{animation:flashbg 1.6s steps(1,end)!important}
 </style>
 </head>
 <body>
@@ -393,6 +438,7 @@
         <button class="swatch" data-theme="light" style="background:#f4f1ea"></button>
         <button class="swatch" data-theme="sepia" style="background:#e8dcc4"></button>
         <button class="swatch" data-theme="dark" style="background:#16171a"></button>
+        <button class="swatch" data-theme="eink" title="墨水屏" style="background:#fff"></button>
       </div>
     </div>
   </div>
@@ -574,11 +620,17 @@ const DB = {
 };
 
 /* ---------- theme ---------- */
-function applyTheme(t){document.documentElement.dataset.theme=t;store.set('theme',t);
+const THEMES=['light','sepia','dark','eink'];
+const THEME_COLOR={light:'#f4f1ea',sepia:'#e8dcc4',dark:'#16171a',eink:'#ffffff'};
+function applyTheme(t){
+  if(!THEMES.includes(t))t='light';
+  document.documentElement.dataset.theme=t;store.set('theme',t);
+  const m=document.querySelector('meta[name=theme-color]');
+  if(m)m.content=THEME_COLOR[t];
   document.querySelectorAll('#themeSeg .swatch').forEach(b=>b.classList.toggle('on',b.dataset.theme===t));}
 applyTheme(store.get('theme','light'));
-$('#themeBtn').onclick=()=>{const o=['light','sepia','dark'];
-  applyTheme(o[(o.indexOf(document.documentElement.dataset.theme)+1)%3]);};
+$('#themeBtn').onclick=()=>{
+  applyTheme(THEMES[(THEMES.indexOf(document.documentElement.dataset.theme)+1)%THEMES.length]);};
 
 /* ---------- account UI ---------- */
 const authModal=$('#authModal');
