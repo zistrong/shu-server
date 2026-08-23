@@ -213,6 +213,15 @@
     background:var(--accent);color:#fff;font-size:15px;font-weight:600}
   .modal .submit:hover{filter:brightness(1.08)}
   .modal .submit:disabled{opacity:.6;cursor:default}
+  .modal .divider{display:flex;align-items:center;gap:10px;margin:16px 0 10px;
+    color:var(--ink-soft);font-size:12px}
+  .modal .divider::before,.modal .divider::after{content:'';flex:1;height:1px;background:var(--line)}
+  .modal .wx-btn{width:100%;padding:11px;border:1.5px solid #07c160;background:var(--bg);
+    color:#07c160;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px}
+  .modal .wx-btn:hover{filter:brightness(1.05)}
+  .modal .wx-btn:disabled{opacity:.6;cursor:default}
+  .modal .wx-btn svg{width:20px;height:20px;flex:none}
   .modal .switch{text-align:center;margin-top:16px;font-size:13px;color:var(--ink-soft)}
   .modal .switch a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:600}
   .modal .err{color:#c1666b;font-size:13px;min-height:18px;margin-top:4px}
@@ -514,6 +523,12 @@
     </div>
     <div class="err" id="authErr"></div>
     <button class="submit" id="authSubmit">登录</button>
+    <div class="divider hidden" id="wxDivider">或</div>
+    <button class="wx-btn hidden" id="wxLoginBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.2 0-2.4-.25-3.4-.7L3 21l1.6-5.3A8.5 8.5 0 1 1 21 11.5z"/>
+      </svg>微信扫码登录
+    </button>
     <div class="switch" id="authSwitch">还没有账号？<a>去注册</a></div>
   </div>
 </div>
@@ -532,8 +547,11 @@ const CLIENT = (()=>{let c=store.get('clientId');
 const Auth = {
   token: store.get('token', null),
   user:  store.get('user', null),
-  set(token,user){this.token=token;this.user=user;store.set('token',token);store.set('user',user);},
-  clear(){this.token=null;this.user=null;localStorage.removeItem('token');localStorage.removeItem('user');},
+  name:  store.get('name', null),
+  set(token,user,name){this.token=token;this.user=user;this.name=name||user||'';
+    store.set('token',token);store.set('user',user);store.set('name',this.name);},
+  clear(){this.token=null;this.user=null;this.name=null;
+    localStorage.removeItem('token');localStorage.removeItem('user');localStorage.removeItem('name');},
   headers(extra){return Object.assign({}, extra||{}, this.token?{'Authorization':'Bearer '+this.token}:{});},
   async register(u,p){return this._post('/api/register',u,p);},
   async login(u,p){return this._post('/api/login',u,p);},
@@ -637,7 +655,7 @@ const authModal=$('#authModal');
 let authMode='login';
 function refreshAcctUI(){
   const btn=$('#acctBtn');
-  if(Auth.user){btn.textContent='👤 '+Auth.user;btn.classList.add('on');btn.title='点击退出登录';}
+  if(Auth.user){btn.textContent='👤 '+(Auth.name||Auth.user);btn.classList.add('on');btn.title='点击退出登录';}
   else{btn.textContent='登录 / 注册';btn.classList.remove('on');btn.title='';}
 }
 function openAuth(mode){
@@ -656,7 +674,7 @@ async function reloadAfterAuth(){await DB.init();refreshAcctUI();doSearch();}
 
 $('#acctBtn').onclick=async()=>{
   if(Auth.user){
-    if(confirm('退出登录「'+Auth.user+'」？'))
+    if(confirm('退出登录「'+(Auth.name||Auth.user)+'」？'))
       {await Auth.logout();await reloadAfterAuth();}
   }else openAuth('login');
 };
@@ -678,6 +696,79 @@ $('#authSubmit').onclick=async()=>{
 authModal.addEventListener('keydown',e=>{if(e.key==='Enter')$('#authSubmit').click();
   if(e.key==='Escape')closeAuth();});
 refreshAcctUI();
+
+/* ---------- 微信扫码登录 ---------- */
+let WX_ENABLED=false;
+fetch('/api/wechat/enabled').then(r=>r.json()).then(d=>{
+  WX_ENABLED=!!(d&&d.enabled);syncWxBtn();
+}).catch(()=>{});
+function syncWxBtn(){
+  $('#wxLoginBtn').classList.toggle('hidden',!WX_ENABLED);
+  $('#wxDivider').classList.toggle('hidden',!WX_ENABLED);
+}
+let flow=null; // {state,win,poll,timer} 一次扫码登录流程
+function onWxMessage(e){
+  if(e.origin!==location.origin)return;
+  const d=e.data;
+  if(d&&d.type==='wechat-login'&&flow&&d.state===flow.state)wxFinish(d);
+}
+function wxCleanup(){
+  if(flow){
+    if(flow.timer)clearTimeout(flow.timer);
+    if(flow.poll)clearInterval(flow.poll);
+    try{if(flow.win&&!flow.win.closed)flow.win.close();}catch(e){}
+    flow=null;
+  }
+  window.removeEventListener('message',onWxMessage);
+}
+function wxFinish(d){
+  wxCleanup();
+  const err=$('#authErr'),btn=$('#wxLoginBtn');
+  btn.disabled=false;btn.textContent='微信扫码登录';
+  if(d.error){err.textContent='微信登录失败：'+d.error;return;}
+  const name=d.name||'微信用户';
+  Auth.set(d.token,name,name);
+  closeAuth();reloadAfterAuth();
+}
+$('#wxLoginBtn').onclick=async()=>{
+  const err=$('#authErr'),btn=$('#wxLoginBtn');
+  err.textContent='';
+  wxCleanup();
+  const win=window.open('','wxlogin','width=640,height=600');
+  if(!win){err.textContent='浏览器拦截了弹窗，请允许本站弹出窗口后重试';return;}
+  btn.disabled=true;btn.textContent='正在打开微信扫码…';
+  let d=null;
+  try{const r=await fetch('/api/wechat/login');d=await r.json();}catch(e){}
+  if(!d||!d.url){
+    btn.disabled=false;btn.textContent='微信扫码登录';
+    err.textContent=(d&&d.error)||'微信登录暂时不可用，请稍后重试';
+    try{win.close();}catch(e){}
+    return;
+  }
+  flow={state:d.state,win:win,poll:null,timer:null};
+  window.addEventListener('message',onWxMessage);
+  // 兜底：弹窗被拦/消息丢失时，按 state 轮询同源 localStorage（wechat.html 会写入）
+  flow.poll=setInterval(()=>{
+    if(!flow)return;
+    let raw=null;
+    try{raw=localStorage.getItem('wx-login-'+flow.state);}catch(e){}
+    if(raw){
+      try{localStorage.removeItem('wx-login-'+flow.state);}catch(e){}
+      try{wxFinish(JSON.parse(raw));}catch(e){return;}
+      return;
+    }
+    try{if(flow.win&&flow.win.closed){
+      wxCleanup();btn.disabled=false;btn.textContent='微信扫码登录';
+      err.textContent='已取消微信登录';
+    }}catch(e){}
+  },500);
+  flow.timer=setTimeout(()=>{
+    wxCleanup();btn.disabled=false;btn.textContent='微信扫码登录';
+    err.textContent='二维码已过期，请重试';
+  },300000);
+  win.location.href=d.url;
+};
+syncWxBtn();
 
 /* ---------- cover colors ---------- */
 const PALETTE=[['#8a5a2b','#5c3a1a'],['#3d5a80','#293f5c'],['#606c38','#3f4a22'],

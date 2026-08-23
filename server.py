@@ -10,12 +10,14 @@
     security   密码哈希（PBKDF2）
     libraries  图书馆目录扫描
     base       HTTP 基础设施与路由注册（@route / @needs_db / BaseHandler）
-    accounts / reading / tags / readtime   各功能 API
+    accounts / wechat / reading / tags / readtime   各功能 API
     handler    组装最终 Handler
 
 环境变量：
     MONGO_URL   MongoDB 连接串（默认 mongodb://localhost:27017）
     PORT        监听端口（默认 8000）
+    WECHAT_APPID / WECHAT_SECRET / WECHAT_REDIRECT_URI
+                微信开放平台扫码登录（可选，见 README）
 
 用法：
     python3 server.py [端口]      # 本地运行（需 pip install pymongo）

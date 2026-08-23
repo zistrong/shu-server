@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>微信登录</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<style>
+  :root{color-scheme:light dark}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#f4f1ea;color:#3a3530}
+  @media (prefers-color-scheme:dark){body{background:#16171a;color:#cfc9c2}}
+  .box{text-align:center;padding:32px;max-width:320px}
+  .ico{font-size:44px;margin-bottom:14px}
+  .title{font-size:17px;font-weight:600;margin-bottom:8px}
+  .sub{font-size:13px;opacity:.75;line-height:1.6}
+  .spin{display:inline-block;width:22px;height:22px;margin-bottom:14px;
+    border:3px solid rgba(128,128,128,.25);border-top-color:#07c160;border-radius:50%;
+    animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="spin" id="spin"></div>
+  <div class="title" id="title">登录成功</div>
+  <div class="sub" id="sub">正在返回书房…</div>
+</div>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search);
+  const token = q.get('token'), name = q.get('name'),
+        error = q.get('error'), state = q.get('state') || '';
+  const done = { type: 'wechat-login', state: state, token: token, name: name, error: error };
+
+  // 1) 优先通过 postMessage 直接通知打开本窗口的主页面
+  try {
+    if (window.opener) window.opener.postMessage(done, location.origin);
+  } catch (e) { /* 忽略跨域等异常 */ }
+
+  // 2) 兜底：写入同源 localStorage（主页面按 state 轮询读取），防止弹窗被拦截后丢失结果
+  try {
+    localStorage.setItem('wx-login-' + state, JSON.stringify(done));
+  } catch (e) { /* 忽略 */ }
+
+  if (error) {
+    document.getElementById('title').textContent = '登录失败';
+    document.getElementById('sub').textContent = error + '，请关闭本窗口返回重试';
+  } else {
+    document.getElementById('sub').textContent = (name ? '「' + name + '」' : '') + '已登录，正在返回书房…';
+  }
+  document.getElementById('spin').style.display = 'none';
+
+  // 短暂停留展示结果后自动关闭弹窗；无 opener（如直接打开）则提示手动关闭
+  setTimeout(function () {
+    try { if (window.opener) window.close(); } catch (e) { /* 忽略 */ }
+  }, 800);
+  if (!window.opener) {
+    document.getElementById('sub').textContent += '（可手动关闭本窗口）';
+  }
+})();
+</script>
+</body>
+</html>

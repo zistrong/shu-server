@@ -4,10 +4,11 @@
 """
 from .base import BaseHandler
 from .accounts import AccountMixin
+from .wechat import WechatMixin
 from .reading import ReadingMixin
 from .tags import TagsMixin
 from .readtime import ReadTimeMixin
 
 
-class Handler(AccountMixin, ReadingMixin, TagsMixin, ReadTimeMixin, BaseHandler):
+class Handler(AccountMixin, WechatMixin, ReadingMixin, TagsMixin, ReadTimeMixin, BaseHandler):
     pass

@@ -23,6 +23,10 @@ services:
     environment:
       MONGO_URL: mongodb://mongo:27017
       PORT: "8000"
+      # 微信开放平台扫码登录（可选）：填入后重启容器即启用，详见 README
+      # WECHAT_APPID: ""
+      # WECHAT_SECRET: ""
+      # WECHAT_REDIRECT_URI: ""
     ports:
       - "8000:8000"
     volumes:
