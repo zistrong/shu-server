@@ -125,10 +125,8 @@
     display:flex;flex-direction:column;transition:background .3s,color .3s}
   .r-top{position:sticky;top:0;display:flex;align-items:center;gap:12px;padding:12px 18px;
     background:transparent;backdrop-filter:blur(6px);z-index:5}
-  .r-top .r-title{font-family:var(--font);font-weight:700;font-size:16px;flex:1;
+  .r-top .r-ch{font-family:var(--font);font-weight:700;font-size:16px;flex:1;min-width:0;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .r-top .r-ch{color:var(--ink-soft);font-size:13px;white-space:nowrap;max-width:34%;
-    overflow:hidden;text-overflow:ellipsis}
   .r-btn{border:1px solid var(--line);background:var(--panel);color:var(--read-ink);
     height:36px;padding:0 12px;border-radius:9px;font-size:14px;display:inline-flex;align-items:center;gap:5px}
   .r-btn:hover{border-color:var(--accent)}
@@ -380,7 +378,6 @@
 <div id="reader" class="hidden">
   <div class="r-top">
     <button class="r-btn" id="backBtn">‹ 书架</button>
-    <div class="r-title" id="rTitle"></div>
     <div class="r-ch" id="rCh"></div>
     <button class="r-btn" id="tagBtn">🏷️ 标签</button>
     <button class="r-btn" id="tocBtn">目录</button>
@@ -1023,9 +1020,8 @@ function openBook(lib,id,pendingTag){
   CUR=b;                                        // 含 .lib 与 .bookid
   $('#library').classList.add('hidden');
   $('#reader').classList.remove('hidden');
-  $('#rTitle').textContent=b.title;
   $('#footBook').textContent=`${libName(lib)} · #${id} ${b.title}`;
-  $('#rCh').textContent=''; rContent.innerHTML='<div class="spinner"></div>';
+  $('#rCh').textContent=''; curCh=-1; rContent.innerHTML='<div class="spinner"></div>';
   document.title=b.title+' · 书房';
   DB.pushRecent(lib,id);
   RT.markActivity(); updateFootClock();         // 开始计时
@@ -1052,7 +1048,7 @@ function closeBook(){
 }
 
 function currentChapterIndex(){
-  const y=rScroll.scrollTop+80;
+  const y=rScroll.scrollTop+rScroll.offsetTop+80;  // offsetTop 相对 #reader，含顶栏高度
   let idx=0;
   for(let i=0;i<CHAPTERS.length;i++){
     const el=document.getElementById('chap-'+i);
